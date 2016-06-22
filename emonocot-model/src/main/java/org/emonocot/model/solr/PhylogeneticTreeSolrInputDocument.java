@@ -10,6 +10,7 @@ public class PhylogeneticTreeSolrInputDocument extends BaseSolrInputDocument {
 
 	public PhylogeneticTreeSolrInputDocument(PhylogeneticTree tree) {
 		super(tree);
+		super.build();
 		this.tree = tree;
 	}
 	

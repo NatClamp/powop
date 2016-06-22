@@ -9,6 +9,7 @@ public class ImageSolrInputDocument extends BaseSolrInputDocument {
 	
 	public ImageSolrInputDocument(Image image) {
 		super(image);
+		super.build();
 		this.image = image;
 	}
 	

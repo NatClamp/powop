@@ -10,6 +10,7 @@ public class IdentificationKeySolrInputDocument extends BaseSolrInputDocument {
 	
 	public IdentificationKeySolrInputDocument(IdentificationKey key) {
 		super(key);
+		super.build();
 		this.key = key;
 	}
 

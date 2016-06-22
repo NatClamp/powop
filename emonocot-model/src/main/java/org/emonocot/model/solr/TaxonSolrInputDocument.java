@@ -1,229 +1,131 @@
 package org.emonocot.model.solr;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.solr.common.SolrInputDocument;
-import org.emonocot.api.job.WCSPTerm;
 import org.emonocot.model.Description;
 import org.emonocot.model.Distribution;
-import org.emonocot.model.Identification;
-import org.emonocot.model.Identifier;
 import org.emonocot.model.Image;
 import org.emonocot.model.MeasurementOrFact;
 import org.emonocot.model.Reference;
 import org.emonocot.model.Taxon;
-import org.emonocot.model.TypeAndSpecimen;
 import org.emonocot.model.VernacularName;
+import org.emonocot.model.constants.DescriptionType;
 import org.emonocot.model.constants.Location;
-import org.emonocot.pager.FacetName;
-import org.gbif.dwc.terms.IucnTerm;
 import org.gbif.ecat.voc.Rank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.CaseFormat;
+
 
 public class TaxonSolrInputDocument extends BaseSolrInputDocument {
-	
+
+	public static String propertyToSolrField(String propertyName, String type) {
+		return String.format("taxon.%s_%s",
+				CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, propertyName),
+				type);
+	}
+
+	public static String solrFieldToProperty(String field) {
+		Pattern pattern = Pattern.compile("taxon.(.*)_\\w{1,2}");
+		Matcher matcher = pattern.matcher(field);
+		return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, matcher.matches() ? matcher.group(1) : field);
+	}
+
+	private Logger logger = LoggerFactory.getLogger(TaxonSolrInputDocument.class);
+
+	private Set<String> sources;
+
 	private Taxon taxon;
 
 	public TaxonSolrInputDocument(Taxon taxon) {
 		super(taxon);
+		super.build();
 		this.taxon = taxon;
+		this.sources = new HashSet<>();
 	}
-	
+
 	public SolrInputDocument build() {
 		sid.addField("searchable.label_sort", taxon.getScientificName());
-		
-		if(Rank.FAMILY.equals(taxon.getTaxonRank()) && taxon.getFamily() == null) {
-			addField(sid,"taxon.family_ns", taxon.getScientificName());
-			addField(sid,"taxon.family_ss", taxon.getScientificName());
-		} else {
-			addField(sid,"taxon.family_ns", taxon.getFamily());
-			addField(sid,"taxon.family_ss", taxon.getFamily());
-		}
-		if(taxon.getAcceptedNameUsage() != null) {
-			addField(sid,"taxon.family_ss", taxon.getAcceptedNameUsage().getFamily());
-		}
 
-		addField(sid,FacetName.GENUS.getSolrField(), taxon.getGenus());
-		if(taxon.getAcceptedNameUsage() != null) {
-			addField(sid,FacetName.GENUS.getSolrField(), taxon.getAcceptedNameUsage().getGenus());
-		}
-		if(Rank.GENUS == taxon.getTaxonRank() && taxon.getGenus() == null) {
-			addField(sid,"taxon.genus_ns", taxon.getScientificName());
-			addField(sid,FacetName.GENUS.getSolrField(), taxon.getScientificName());
-		} else {
-			addField(sid,"taxon.genus_ns", taxon.getGenus());
-		}
+		indexRank(Rank.FAMILY, "family");
+		indexRank(Rank.Subfamily, "subfamily");
+		indexRank(Rank.GENUS, "genus");
+		indexRank(Rank.Tribe, "tribe");
+		indexRank(Rank.Subtribe, "subtribe");
 
-		addField(sid,"taxon.infraspecific_epithet_s", taxon.getInfraspecificEpithet());
-		addField(sid,"taxon.infraspecific_epithet_ns", taxon.getInfraspecificEpithet());
-		addField(sid,"taxon.order_s", taxon.getOrder());
-		addField(sid,"taxon.scientific_name_t", taxon.getScientificName());
-		addField(sid,"taxon.scientific_name_authorship_s", taxon.getScientificNameAuthorship());
-		addField(sid,"taxon.specific_epithet_s", taxon.getSpecificEpithet());
-		addField(sid,"taxon.specific_epithet_ns", taxon.getSpecificEpithet());
-
-		addField(sid,FacetName.SUBFAMILY.getSolrField(), taxon.getSubfamily());
-		if(Rank.Subfamily.equals(taxon.getTaxonRank()) && taxon.getSubfamily() == null) {
-			addField(sid,FacetName.SUBFAMILY.getSolrField(), taxon.getScientificName());
-		}
-		if(taxon.getAcceptedNameUsage() != null) {
-			addField(sid,FacetName.SUBFAMILY.getSolrField(), taxon.getAcceptedNameUsage().getSubfamily());
-		}
-
-		addField(sid,"taxon.subgenus_s", taxon.getSubgenus());
-
-		addField(sid,FacetName.SUBTRIBE.getSolrField(), taxon.getSubtribe());
-		if(Rank.Subtribe.equals(taxon.getTaxonRank()) && taxon.getSubtribe() == null) {
-			addField(sid,FacetName.SUBTRIBE.getSolrField(), taxon.getScientificName());
-		}
-		if(taxon.getAcceptedNameUsage() != null) {
-			addField(sid,FacetName.SUBTRIBE.getSolrField(), taxon.getAcceptedNameUsage().getSubtribe());
-		}
-
-		addField(sid,"taxon.taxonomic_status_s", ObjectUtils.toString(taxon.getTaxonomicStatus(), null));
-		addField(sid,"taxon.taxon_rank_s", ObjectUtils.toString(taxon.getTaxonRank(), null));
-
-		addField(sid,FacetName.TRIBE.getSolrField(), taxon.getTribe());
-		if(Rank.Tribe.equals(taxon.getTaxonRank()) && taxon.getTribe() == null) {
-			addField(sid,FacetName.TRIBE.getSolrField(), taxon.getScientificName());
-		}
-		if(taxon.getAcceptedNameUsage() != null) {
-			addField(sid,FacetName.TRIBE.getSolrField(), taxon.getAcceptedNameUsage().getTribe());
-		}
+		addField(sid, "taxon.infraspecific_epithet_s", taxon.getInfraspecificEpithet());
+		addField(sid, "taxon.name_published_in_string_s", taxon.getNamePublishedInString());
+		addField(sid, "taxon.name_published_in_year_i", taxon.getNamePublishedInYear());
+		addField(sid, "taxon.order_s", taxon.getOrder());
+		addField(sid, "taxon.scientific_name_authorship_s", taxon.getScientificNameAuthorship());
+		addField(sid, "taxon.scientific_name_t", taxon.getScientificName());
+		addField(sid, "taxon.specific_epithet_s", taxon.getSpecificEpithet());
+		addField(sid, "taxon.subgenus_s", taxon.getSubgenus());
+		addField(sid, "taxon.taxon_rank_s", ObjectUtils.toString(taxon.getTaxonRank(), null));
+		addField(sid, "taxon.taxonomic_status_s", ObjectUtils.toString(taxon.getTaxonomicStatus(), null));
+		addField(sid, "taxon.verbatim_taxon_rank_s", taxon.getVerbatimTaxonRank()); 
 
 		sid.addField("taxon.descriptions_not_empty_b", !taxon.getDescriptions().isEmpty());
-
-		for(Description d : taxon.getDescriptions()) {
-			Set<String> sources = new HashSet<>();
-			if(d.getAuthority() != null) {
-				sources.add(d.getAuthority().getIdentifier());
-			}
-			
-			sid.addField("searchable.sources_ss", sources);
-		}
-
 		sid.addField("taxon.distribution_not_empty_b", !taxon.getDistribution().isEmpty());
-		for(Distribution d : taxon.getDistribution()) {
-			sid.addField("taxon.distribution_ss", d.getLocation().getCode());
-			switch(d.getLocation().getLevel()) {
-			case 0:
-				for(Location r : (Set<Location>)d.getLocation().getChildren()) {
-					for(Location c : (Set<Location>)r.getChildren()) {
-						for(Location l : (Set<Location>)c.getChildren()) {
-							indexLocality(l,sid);
-						}
-					}
-				}
-				break;
-			case 1:
-				for(Location c : (Set<Location>)d.getLocation().getChildren()) {
-					for(Location l : (Set<Location>)c.getChildren()) {
-						indexLocality(l,sid);
-					}
-				}
-				break;
-			case 2:
-				for(Location l : (Set<Location>)d.getLocation().getChildren()) {
-					indexLocality(l,sid);
-				}
-				break;
-			case 3:
-				indexLocality(d.getLocation(),sid);
-				break;
-			default:
-				break;
-			}
-
-			if(d.getAuthority() != null) {
-				sid.addField("searchable.sources_ss", d.getAuthority().getIdentifier());
-			}
-		}
-
 		sid.addField("taxon.images_not_empty_b", !taxon.getImages().isEmpty());
+		sid.addField("taxon.measurements_or_facts_not_empty_b", !taxon.getMeasurementsOrFacts().isEmpty());
+		sid.addField("taxon.references_not_empty_b", !taxon.getReferences().isEmpty());
+		sid.addField("taxon.types_and_specimens_not_empty_b", !taxon.getTypesAndSpecimens().isEmpty());
+		sid.addField("taxon.vernacular_names_not_empty_b", !taxon.getVernacularNames().isEmpty());
+		sid.addField("taxon.name_used_b", !taxon.getIdentifications().isEmpty());
+		sid.addField("taxon.has_data_b", hasUsefulData(sid));
+
+		indexDescriptions();
+		indexDistributions();
+		indexVernacularNames();
+		indexMeasurementOrFacts();
+
 		for(Image i : taxon.getImages()) {
 			if(i != null && i.getAuthority() != null) {
-				sid.addField("searchable.sources_ss", i.getAuthority().getIdentifier());
+				sources.add(i.getAuthority().getIdentifier());
 			}
 		}
 
-		sid.addField("taxon.references_not_empty_b", !taxon.getReferences().isEmpty());
 		for(Reference r : taxon.getReferences()) {
 			if(r != null && r.getAuthority() != null) {
-				sid.addField("searchable.sources_ss", r.getAuthority().getIdentifier());
+				sources.add(r.getAuthority().getIdentifier());
 			}
 		}
-
-		boolean hasTaxonomicPlacement = (taxon.getAcceptedNameUsage() != null || taxon.getParentNameUsage() != null);
-		sid.addField("taxon.taxonomic_placement_not_empty_b", hasTaxonomicPlacement);
-
-		sid.addField("taxon.types_and_specimens_not_empty_b", !taxon.getTypesAndSpecimens().isEmpty());
-		for(TypeAndSpecimen t : taxon.getTypesAndSpecimens()) {
-			if(t != null && t.getAuthority() != null) {
-				sid.addField("searchable.sources_ss", t.getAuthority().getIdentifier());
-			}
+		for(String source : sources) {
+			sid.addField("searchable.sources_ss", source);
 		}
 
-		sid.addField("taxon.identifiers_not_empty_b", !taxon.getIdentifiers().isEmpty());
-		for(Identifier i : taxon.getIdentifiers()) {
-			if(i.getAuthority() != null) {
-				sid.addField("searchable.sources_ss", i.getAuthority().getIdentifier());
-			}
-		}
-
-		sid.addField("taxon.measurements_or_facts_not_empty_b", !taxon.getMeasurementsOrFacts().isEmpty());
-		boolean hasLifeForm = false;
-		boolean hasHabitat = false;
-		boolean hasThreatStatus = false;
-		for(MeasurementOrFact m : taxon.getMeasurementsOrFacts()) {
-			sid.addField("taxon.measurement_or_fact_" + m.getMeasurementType().simpleName() + "_txt", m.getMeasurementValue());
-			if(m.getMeasurementType().equals(WCSPTerm.Habitat)) {
-				hasHabitat = true;
-			} else if(m.getMeasurementType().equals(WCSPTerm.Lifeform)) {
-				hasLifeForm = true;
-			} else if(m.getMeasurementType().equals(IucnTerm.threatStatus)) {
-				hasThreatStatus = true;
-			}
-			if(m.getAuthority() != null) {
-				sid.addField("searchable.sources_ss", m.getAuthority().getIdentifier());
-			}
-		}
-		if(!hasLifeForm) {
-			sid.addField("taxon.measurement_or_fact_" + WCSPTerm.Lifeform.simpleName() + "_txt", "_NULL_");
-		}
-		if(!hasHabitat) {
-			sid.addField("taxon.measurement_or_fact_" + WCSPTerm.Habitat.simpleName() + "_txt", "_NULL_");
-		}
-		if(!hasThreatStatus) {
-			sid.addField("taxon.measurement_or_fact_" + IucnTerm.threatStatus.simpleName() + "_txt", "_NULL_");
-		}
-
-		sid.addField("taxon.vernacular_names_not_empty_b", !taxon.getVernacularNames().isEmpty());
-		for(VernacularName v : taxon.getVernacularNames()) {
-			if(v.getAuthority() != null) {
-				sid.addField("searchable.sources_ss", v.getAuthority().getIdentifier());
-			}
-		}
-
-		sid.addField("taxon.name_used_b", !taxon.getIdentifications().isEmpty());
-
-		Set<String> usedAt = new HashSet<>();
-		for(Identification identification : taxon.getIdentifications()) {
-			usedAt.add(identification.getIdentifiedBy());
-		}
-		for(String used : usedAt) {
-			sid.addField("taxon.name_used_at_ss", used);
-		}
-
-		sid.addField("taxon.has_data_b", hasUsefulData(sid));
 		return sid;
 	}
-	
-	private void indexLocality(Location g, SolrInputDocument sid) {
-		if(g.getParent() != null) {
-			indexLocality(g.getParent(), sid);
+
+	private void indexMeasurementOrFacts() {
+		for(MeasurementOrFact m : taxon.getMeasurementsOrFacts()) {
+			String typeName = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, m.getMeasurementType().simpleName());
+			// If a unit is specified, assume it is a numeric measurement
+			if(m.getMeasurementUnit() != null) {
+				try {
+					Double value = Double.parseDouble(m.getMeasurementValue());
+					sid.addField("taxon.measurement_" + typeName + "_ds", value);
+				} catch (NumberFormatException e) {
+					logger.warn("Could not parse {} as a double", m.getMeasurementValue());
+				}
+			} else {
+				sid.addField("taxon.fact_" + typeName + "_ss", m.getMeasurementValue());
+			}
+
+			if(m.getAuthority() != null) {
+				sources.add(m.getAuthority().getIdentifier());
+			}
 		}
-		sid.addField("taxon.distribution_" + g.getPrefix() + "_" + g.getLevel() + "_ss", g.toString());
 	}
 
 	/*
@@ -233,12 +135,10 @@ public class TaxonSolrInputDocument extends BaseSolrInputDocument {
 		String[] usefulFields = {
 				"taxon.descriptions_not_empty_b",
 				"taxon.distribution_not_empty_b",
-				"taxon.identifiers_not_empty_b",
 				"taxon.images_not_empty_b",
 				"taxon.measurements_or_facts_not_empty_b",
 				"taxon.name_used_b",
 				"taxon.references_not_empty_b",
-				"taxon.taxonomic_placement_not_empty_b",
 				"taxon.types_and_specimens_not_empty_b",
 				"taxon.vernacular_names_not_empty_b"
 		};
@@ -250,5 +150,86 @@ public class TaxonSolrInputDocument extends BaseSolrInputDocument {
 		}
 
 		return false;
+	}
+
+	private void indexDescriptions() {
+		for(Description d : taxon.getDescriptions()) {
+			String typeString = "";
+			for(DescriptionType dt : d.getTypes()) {
+				if(!typeString.isEmpty()) {
+					typeString += "_";
+				}
+				typeString += CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, dt.toString());
+			}
+			sid.addField(String.format("taxon.description_%s_t", typeString), d.getDescription());
+
+			if(d.getAuthority() != null) {
+				sources.add(d.getAuthority().getIdentifier());
+			}
+		}
+	}
+
+	private void indexDistributions() {
+		TreeSet<String> locations = new TreeSet<>();
+		for(Distribution d : taxon.getDistribution()) {
+			locations.add(d.getLocation().getCode());
+			indexChildLocations(locations, d.getLocation().getChildren());
+			indexParentLocations(locations, d.getLocation().getParent());
+
+			if(d.getAuthority() != null) {
+				sources.add(d.getAuthority().getIdentifier());
+			}
+		}
+
+		for(String location : locations) {
+			sid.addField("taxon.distribution_ss", location);
+		}
+	}
+
+	private void indexParentLocations(TreeSet<String> locations, Location parent) {
+		if(parent == null) {
+			return;
+		}
+
+		locations.add(parent.getCode());
+		indexParentLocations(locations, parent.getParent());
+	}
+
+	private void indexChildLocations(Set<String> resultLocations, Set<Location> locations) {
+		if(locations == null) {
+			return;
+		}
+
+		for(Location location : locations) {
+			resultLocations.add(location.getCode());
+			indexChildLocations(resultLocations, location.getChildren());
+		}
+	}
+
+	private void indexRank(Rank rank, String property) {
+		String solrField = propertyToSolrField(property, "ss");
+		try {
+			if(rank.equals(taxon.getTaxonRank()) && BeanUtils.getProperty(taxon, property) == null) {
+				addField(sid, solrField, taxon.getScientificName());
+			} else {
+				addField(sid, solrField, BeanUtils.getProperty(taxon, property));
+			}
+
+			// When a taxon is a synonym, the accepted name should also be indexed
+			if(taxon.getAcceptedNameUsage() != null) {
+				addField(sid, solrField, BeanUtils.getProperty(taxon.getAcceptedNameUsage(), property));
+			}
+		} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+			logger.error("Error getting property {} from taxon. Does get{}() exist?", property, property);
+		}
+	}
+
+	private void indexVernacularNames() {
+		for(VernacularName v : taxon.getVernacularNames()) {
+			sid.addField("taxon.vernacular_names_ss", v.getVernacularName());
+			if(v.getAuthority() != null) {
+				sources.add(v.getAuthority().getIdentifier());
+			}
+		}
 	}
 }
