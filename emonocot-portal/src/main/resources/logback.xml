@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <File>/usr/local/tomcat/logs/emonocot-portal.log</File>
+		<encoder>
+			<pattern>%d{ISO8601} | %X{req.remoteHost} | %X{req.requestURI} | %X{req.userAgent} | %-5p | %t | %c | %m%n</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<maxIndex>5</maxIndex>
+      <FileNamePattern>/usr/local/tomcat/logs/emonocot-portal.log.%i</FileNamePattern>
+		</rollingPolicy>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<MaxFileSize>100MB</MaxFileSize>
+		</triggeringPolicy>
+	</appender>
+
+	<appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+      <pattern>PORTAL | %d{ISO8601} | %-5p | %t | %logger{1} | %m%n</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="org.apache" level="warn"/>
+	<logger name="org.hibernate" level="info"/>
+	<logger name="org.springframework.beans" level="info"/>
+	<logger name="org.springframework.jdbc" level="info"/>
+	<logger name="org.springframework.orm" level="info"/>
+  <logger name="org.springframework.security" level="info" />
+  <logger name="org.springframework.scheduling" level="info" />
+	<logger name="org.emonocot.job.dwc.read.BaseDataFieldSetMapper" level="info"/>
+	<logger name="org.emonocot.job.dwc.taxon.FieldSetMapper" level="info"/>
+  <logger name="org.apache.jasper.servlet.TldScanner" level="fine" />
+  <logger name="org.quartz" level="info" />
+
+	<!--logger name="query" level="INFO" additivity="false">
+		<appender-ref ref="database"/>
+	</logger-->
+
+	<root level="info">
+		<appender-ref ref="stdout"/>
+	</root>
+</configuration>
