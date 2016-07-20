@@ -36,6 +36,7 @@
 
 	<properties>
 		<aspectj.version>1.6.12</aspectj.version>
+		<docker.registry>eu.gcr.io/powop-1349</docker.registry>
 		<geotools.version>2.7.0</geotools.version>
 		<harvester.webAppRootKey>emonocot-harvest</harvester.webAppRootKey>
 		<hibernate.version>3.6.7.Final</hibernate.version>
@@ -46,13 +47,13 @@
 		<portal.webAppRootKey>emonocot-portal</portal.webAppRootKey>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<skip.global.tests>true</skip.global.tests>
+		<skip.global.tests>true</skip.global.tests>
 		<slf4j.version>1.7.5</slf4j.version>
 		<spring.batch.admin.version>1.2.0.RELEASE</spring.batch.admin.version>
 		<spring.batch.version>2.1.8.RELEASE</spring.batch.version>
 		<spring.integration.version>2.2.1.RELEASE</spring.integration.version>
 		<spring.security.version>3.1.0.RELEASE</spring.security.version>
 		<spring.version>3.2.1.RELEASE</spring.version>
-		<skip.global.tests>true</skip.global.tests>
 	</properties>
 
 	<!--issueManagement>
@@ -819,9 +820,9 @@
 				<version>${liquibase.version}</version>
 			</dependency>
 			<dependency>
-			     <groupId>org.liquibase</groupId>
-			     <artifactId>liquibase-maven-plugin</artifactId>
-			     <version>${liquibase.version}</version>
+				<groupId>org.liquibase</groupId>
+				<artifactId>liquibase-maven-plugin</artifactId>
+				<version>${liquibase.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.yahoo.platform.yui</groupId>
@@ -1211,7 +1212,7 @@
 								<commandlineArgs>rm powop-unit-test-db</commandlineArgs>
 							</configuration>
 						</execution>
-					</executions>    
+					</executions>
 				</plugin>
 				<plugin>
 				    <groupId>org.codehaus.mojo</groupId>
@@ -1222,7 +1223,7 @@
                     		<groupId>mysql</groupId>
 							<artifactId>mysql-connector-java</artifactId>
 							<version>${mysql-connector.version}</version>
-                    	</dependency>        
+                    	</dependency>
                 	</dependencies>
                 	<configuration>
                    		<driver>com.mysql.jdbc.Driver</driver>
@@ -1277,7 +1278,7 @@
 			<plugin>
 		     <groupId>org.codehaus.mojo</groupId>
 		     <artifactId>exec-maven-plugin</artifactId>
-		     <version>1.2.1</version>   
+		     <version>1.2.1</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -1761,7 +1762,6 @@
 				<maven.javadoc.skip>true</maven.javadoc.skip>
 				<maven.site.skip>true</maven.site.skip>
 			</properties>
-			<!-- TODO: Deploy using Cargo -->
 		</profile>
 
 		<profile>
