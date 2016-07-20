@@ -310,6 +310,10 @@
 			<groupId>net.java.truevfs</groupId>
 			<artifactId>truevfs-profile-default</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.spotify</groupId>
+			<artifactId>docker-maven-plugin</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -389,6 +393,21 @@
 				</configuration>
 			</plugin>
 
+			<plugin>
+				<groupId>com.spotify</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<configuration>
+					<imageName>portal</imageName>
+					<dockerDirectory>docker</dockerDirectory>
+					<resources>
+						<resource>
+							<targetPath>/</targetPath>
+							<directory>${project.build.directory}</directory>
+							<include>${project.build.finalName}.war</include>
+						</resource>
+					</resources>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 	<profiles>
