@@ -12,7 +12,6 @@
   <name>eMonocot Harvesting</name>
   <description>Backend Harvesting Routines</description>
 
-
   <dependencies>
     <dependency>
       <groupId>org.emonocot</groupId>
@@ -349,7 +348,7 @@
         <version>0.4.11</version>
         <configuration>
           <imageName>${docker.registry}/harvester</imageName>
-          <dockerDirectory>docker</dockerDirectory>
+          <dockerDirectory>${project.basedir}/docker</dockerDirectory>
           <resources>
             <resource>
               <targetPath>/</targetPath>
@@ -373,7 +372,7 @@
               <goal>tag</goal>
             </goals>
             <configuration>
-              <image>harvester:${project.version}</image>
+              <image>${docker.registry}/harvester</image>
               <newName>${docker.registry}/harvester:${project.version}</newName>
             </configuration>
           </execution>

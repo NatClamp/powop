@@ -360,9 +360,10 @@
 			<plugin>
 				<groupId>com.spotify</groupId>
 				<artifactId>docker-maven-plugin</artifactId>
+				<version>0.4.11</version>
 				<configuration>
-					<imageName>portal</imageName>
-					<dockerDirectory>docker</dockerDirectory>
+					<imageName>${docker.registry}/portal</imageName>
+					<dockerDirectory>${project.basedir}/docker</dockerDirectory>
 					<resources>
 						<resource>
 							<targetPath>/</targetPath>
@@ -371,6 +372,26 @@
 						</resource>
 					</resources>
 				</configuration>
+				<executions>
+					<execution>
+						<id>build-image</id>
+						<phase>package</phase>
+						<goals>
+							<goal>build</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>tag-image</id>
+						<phase>package</phase>
+						<goals>
+							<goal>tag</goal>
+						</goals>
+						<configuration>
+							<image>${docker.registry}/portal</image>
+							<newName>${docker.registry}/portal:${project.version}</newName>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

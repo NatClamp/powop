@@ -4,4 +4,4 @@ COPY conf/setenv.sh bin/
 
 RUN rm -rf webapps/*
 
-ADD emonocot-harvest.war webapps/ROOT.war
+ADD emonocot-harvest.war webapps/harvester.war
