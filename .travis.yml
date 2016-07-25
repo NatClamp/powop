@@ -7,7 +7,7 @@ before_install:
 install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.site.skip=true -B -V -q
 script:
   - mvn test -Punit
-  - mvn integration-test -Pintegration,portal.test.vagrant
+  - mvn verify -Pintegration
 services:
   - docker
 cache:
