@@ -349,6 +349,7 @@
         <configuration>
           <imageName>${docker.registry}/harvester</imageName>
           <dockerDirectory>${project.basedir}/docker</dockerDirectory>
+          <forceTags>true</forceTags>
           <resources>
             <resource>
               <targetPath>/</targetPath>

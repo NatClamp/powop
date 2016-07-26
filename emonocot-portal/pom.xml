@@ -364,6 +364,7 @@
 				<configuration>
 					<imageName>${docker.registry}/portal</imageName>
 					<dockerDirectory>${project.basedir}/docker</dockerDirectory>
+					<forceTags>true</forceTags>
 					<resources>
 						<resource>
 							<targetPath>/</targetPath>
