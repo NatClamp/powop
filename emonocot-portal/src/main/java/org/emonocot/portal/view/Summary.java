@@ -92,38 +92,51 @@ public class Summary {
 		return null;
 	}
 
-	
+
 	public String build(){
+
 		if(taxon.isAccepted()){
-			
 			Set<Description> descriptions = taxon.getDescriptions();
 			for(Description description : descriptions){
 				if(description.getTypes().contains(DescriptionType.summary)){
 					return description.getDescription();
 				}
 			}
-			
-			String location =  buildLocationandHabitat();
-			String uses = new SummaryUses().buildUses(taxon, messageSource);
+		}
 
-			if(location != null && uses != null && !uses.isEmpty()) {
-				return String.format("%s It is %s.", location, uses);
-			} else if(location != null) {
-				return location;
-			} else if(uses != null && !uses.isEmpty()) {
-				if(taxon.getTaxonRank() != null) {
-					return String.format("This %s is accepted, and is %s.", taxon.getTaxonRank().toString().toLowerCase(), uses);
+		if(taxon.getTaxonomicStatus() != null) {
+			if(taxon.isAccepted()){
+
+				String location =  buildLocationandHabitat();
+				String uses = new SummaryUses().buildUses(taxon, messageSource);
+
+				if(location != null && uses != null && !uses.isEmpty()) {
+					return String.format("%s It is %s.", location, uses);
+				} else if(location != null) {
+					return location;
+				} else if(uses != null && !uses.isEmpty()) {
+					if(taxon.getTaxonRank() != null) {
+						return String.format("This %s is accepted, and is %s.", taxon.getTaxonRank().toString().toLowerCase(), uses);
+					} else {
+						return String.format("This plant is %s.", uses);
+					}
 				} else {
-					return String.format("This plant is %s.", uses);
+					String thing = taxon.getTaxonRank() == null ? "plant" : taxon.getTaxonRank().toString().toLowerCase();
+					return String.format("This %s is accepted.", thing);
+				}
+			}
+
+			if(taxon.getAcceptedNameUsage() != null) {
+				if(taxon.getTaxonRank() != null) {
+					return String.format("This %s is a synonym of ", taxon.getTaxonRank().toString().toLowerCase());
+				} else {
+					return "This is a synonym of ";
 				}
 			} else {
-				String thing = taxon.getTaxonRank() == null ? "plant" : taxon.getTaxonRank().toString().toLowerCase();
-				return String.format("This %s is accepted.", thing);
+				return "This is a synonym";
 			}
 		}
-		if(taxon.getTaxonRank() != null) {
-			return String.format("This %s is a synonym of ", taxon.getTaxonRank().toString().toLowerCase());
-		}
-		return "This is a synonym of ";
+
+		return "";
 	}
 }

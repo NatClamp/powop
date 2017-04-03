@@ -50,9 +50,16 @@
 .c-intro {
   display: none;
 
+  small {
+    display: block;
+    margin-bottom: 3.5rem;
+    margin-top: -1rem;
+  }
+
   @media (max-width: $screen-sm-max) {
     .powo-logo {
       width: 200px;
+      height: 110px;
     }
   }
 }
@@ -73,6 +80,11 @@
     width: 90%;
     @media (min-width: $screen-lg) { width: 960px; }
     margin: 0 auto;
+  }
+
+  .powo-logo {
+    width: 300px;
+    height: 145px;
   }
 }
 
